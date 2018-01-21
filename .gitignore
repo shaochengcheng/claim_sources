@@ -102,3 +102,6 @@ ENV/
 
 # DSstore
 .DS_Store
+
+# private data
+twitter_credentials.json
