@@ -80,14 +80,16 @@ def collect_tweets(api, domains, first_page_only):
 
 def sites_popularity(auth_file='twitter_credentials.json',
                      source_file='consensus.csv',
-                     output='popularity.csv',
                      first_page_only=True):
+    if first_page_only is True:
+        output = 'popularity_first_page.csv'
+    else:
+        output = 'popularity.csv'
     s_time = datetime.utcnow()
     auth = twitter_auth(auth_file)
     api = tweepy.API(auth, wait_on_rate_limit=True)
     input_df = pd.read_csv(source_file)
-    output_df = collect_tweets(api,
-                               input_df.Source.tolist()[:100], first_page_only)
+    output_df = collect_tweets(api, input_df.Source.tolist(), first_page_only)
     if first_page_only is True:
         tweets_file = 'popularity_tweets_first_page.csv'
     else:
