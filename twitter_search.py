@@ -2,6 +2,7 @@ import json
 import tweepy
 import pandas as pd
 import logging
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ def twitter_auth(auth_file='twitter_credentials.json'):
         return auth
 
 
-def search_one_domain(api, domain):
+def search_one_domain(api, domain, first_page_only=True):
     tweets_max_count = 10000000  # Some arbitrary large number
     tweets_per_page = 100  # this is the max the API permits
     tweets = []
@@ -48,6 +49,8 @@ def search_one_domain(api, domain):
                         count=tweets_per_page,
                         max_id=str(max_id - 1),
                         since_id=since_id)
+            if first_page_only is True:
+                return new_tweets
             if len(new_tweets) == 0:
                 logger.info('No more tweets found!')
                 return tweets
@@ -61,10 +64,10 @@ def search_one_domain(api, domain):
             return tweets
 
 
-def collect_tweets(api, domains):
+def collect_tweets(api, domains, first_page_only):
     rows = []
     for domain in domains:
-        for tweet in search_one_domain(api, domain):
+        for tweet in search_one_domain(api, domain, first_page_only):
             raw_id = tweet.id
             created_at = tweet.created_at
             json_str = tweet._json
@@ -77,14 +80,24 @@ def collect_tweets(api, domains):
 
 def sites_popularity(auth_file='twitter_credentials.json',
                      source_file='consensus.csv',
-                     output='popularity.csv'):
+                     output='popularity.csv',
+                     first_page_only=True):
+    s_time = datetime.utcnow()
     auth = twitter_auth(auth_file)
     api = tweepy.API(auth, wait_on_rate_limit=True)
     input_df = pd.read_csv(source_file)
-    output_df = collect_tweets(api, input_df.Source.tolist())
-    output_df.to_csv('popularity_tweets.csv', index=False)
+    output_df = collect_tweets(api,
+                               input_df.Source.tolist()[:100], first_page_only)
+    if first_page_only is True:
+        tweets_file = 'popularity_tweets_first_page.csv'
+    else:
+        tweets_file = 'popularity_tweets.csv'
+    output_df.to_csv(tweets_file, index=False)
     volume = output_df.groupby('domain').size().rename('volume').reset_index()
     df = pd.merge(
         input_df, volume, how='left', left_on='Source', right_on='domain')
     df.to_csv(output)
+    e_time = datetime.utcnow()
+    logger.info('Start UTC is %s, End UTC is %s, Time Consuming is %s', s_time,
+                e_time, e_time - s_time)
     return df

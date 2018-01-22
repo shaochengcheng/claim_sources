@@ -17,7 +17,10 @@ def prepare_compiled(fn='compiled.csv'):
 
 
 def prepare_kate_starbird(fn='kate_starbird.csv'):
+    tags = ['Conspiracy Theorists', 'Political Agenda',
+            'Tabloid|Clickbait News']
     df = pd.read_csv(fn)
+    df = df.loc[df[df.columns[2]].isin(tags)]
     return df[df.columns[0]].str.lower().drop_duplicates().tolist()
 
 
@@ -73,5 +76,6 @@ def consensus(to_fn='consensus.csv'):
 
     consensus_b = consensus.replace(to_replace=['Yes', 'No'], value=[1, 0])
     consensus['n_consensus'] = consensus_b.sum(axis=1)
+    consensus = consensus.sort_index()
 
     consensus.to_csv(to_fn)
