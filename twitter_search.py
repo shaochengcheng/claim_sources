@@ -103,3 +103,22 @@ def sites_popularity(auth_file='twitter_credentials.json',
     logger.info('Start UTC is %s, End UTC is %s, Time Consuming is %s', s_time,
                 e_time, e_time - s_time)
     return df
+
+
+def track_sites_popularity(auth_file='twitter_credentials.json',
+                           source_file='consensus.n2.csv'):
+    auth = twitter_auth(auth_file)
+    api = tweepy.API(auth, wait_on_rate_limit=True)
+    input_df = pd.read_csv(source_file)[:10]
+    output_df = collect_tweets(api, input_df.Source.tolist(), True)
+    cname = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+    volume = output_df.groupby('domain').size().rename(cname).reset_index()
+    df = pd.merge(
+        input_df, volume, how='left', left_on='Source', right_on='domain')
+    df = df.fillna(0.0)
+    df.to_csv(output, index=False)
+
+
+if  __name__ == '__main__':
+    logging.basicConfig(level='DEBUG')
+    track_sites_popularity()
