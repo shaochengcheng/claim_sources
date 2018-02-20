@@ -105,3 +105,6 @@ ENV/
 
 # private data
 twitter_credentials.json
+
+# results data
+consensus.n2.csv
