@@ -121,5 +121,6 @@ def track_sites_popularity(auth_file='twitter_credentials.json',
 
 
 if  __name__ == '__main__':
-    logging.basicConfig(level='DEBUG')
+    import sys
+    logging.basicConfig(level='DEBUG', stream=sys.stdout)
     track_sites_popularity()
