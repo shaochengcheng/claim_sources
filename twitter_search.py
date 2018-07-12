@@ -1,6 +1,7 @@
 import json
 import tweepy
 import pandas as pd
+import numpy as np
 import logging
 from datetime import datetime
 
@@ -109,7 +110,8 @@ def track_sites_popularity(auth_file='twitter_credentials.json',
                            source_file='consensus.n2.csv'):
     auth = twitter_auth(auth_file)
     api = tweepy.API(auth, wait_on_rate_limit=True)
-    input_df = pd.read_csv(source_file).head(20)
+    import ipdb; ipdb.set_trace()
+    input_df = pd.read_csv(source_file).head(10)
     output_df = collect_tweets(api, input_df.Source.tolist(), 
                                first_page_only=True)
     cname = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
@@ -118,6 +120,7 @@ def track_sites_popularity(auth_file='twitter_credentials.json',
     obv_t = ((gp.created_at.max() - gp.created_at.min()) / np.timedelta64(1, 's')).fillna(1.0)
     exp_v = obv_v / obv_t * 24 * 3600
     r_str = obv_v.astype(str) + '/' + exp_v.astype(str)
+    r_str[obv_v < 100] = obv_v[obv_v < 100].astype(str) + '/' + (obv_v[obv_v <100 ] / 7.0).astype(str)
     r_str = r_str.rename(cname).reset_index()
     df = pd.merge(
         input_df, r_str, how='left', left_on='Source', right_on='domain')
