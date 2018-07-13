@@ -117,14 +117,18 @@ def track_sites_popularity(auth_file='twitter_credentials.json',
     sdf = pd.read_csv(source_file).head(10)
     rdf = collect_tweets(api, sdf.Source.tolist(), first_page_only=True)
     cname = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-    gp = rdf.groupby(sdf.Source.tolist())
+    gp = rdf.groupby('domain')
     import ipdb; ipdb.set_trace()
     obv_v = gp.size()
     obv_t = (
         (gp.created_at.max() - gp.created_at.min()) / np.timedelta64(1, 's'))
     exp_v = obv_v / obv_t * 24 * 3600
     exp_v[obv_v < 100] = obv_v[obv_v < 100] / 7.0
-    exp_v.fillna(0.0, inplace=True)
+    # left merge
+    obv_v_full = pd.Series(0.0, index=sdf.Source.tolist())
+    obv_v_full[obv_v.index] = obv_v.values
+    exp_v_full = pd.Series(0.0, index=sdf.Source.tolist())
+    exp_v_full[exp_v.index] = exp_v.values
     try:
         FileNotFoundError
     except NameError:
@@ -133,19 +137,19 @@ def track_sites_popularity(auth_file='twitter_credentials.json',
     try:
         obv_df = pd.read_csv(obv_file)
         obv_df.set_index('domain', inplace=True)
-        obv_df[cname] = obv_v
+        obv_df[cname] = obv_v_full
         obv_df.to_csv(obv_file, index=True)
     except FileNotFoundError:
-        obv_v.to_csv(obv_file, index=True)
+        obv_v_full.to_csv(obv_file, index=True)
 
     # save exp_v
     try:
         exp_df = pd.read_csv(exp_file)
         exp_df.set_index('domain', inplace=True)
-        exp_df[cname] = exp_v
+        exp_df[cname] = exp_v_full
         exp_df.to_csv(exp_file, index=True)
     except FileNotFoundError:
-        exp_v.to_csv(exp_file, index=True)
+        exp_v_full.to_csv(exp_file, index=True)
 
 
 if __name__ == '__main__':
