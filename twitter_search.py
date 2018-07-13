@@ -43,7 +43,9 @@ def search_one_domain(api, domain, first_page_only=True):
             else:
                 if since_id is None:
                     new_tweets = api.search(
-                        q=domain, count=tweets_per_page, max_id=str(max_id - 1))
+                        q=domain,
+                        count=tweets_per_page,
+                        max_id=str(max_id - 1))
                 else:
                     new_tweets = api.search(
                         q=domain,
@@ -107,29 +109,42 @@ def sites_popularity(auth_file='twitter_credentials.json',
 
 
 def track_sites_popularity(auth_file='twitter_credentials.json',
-                           source_file='consensus.n2.csv'):
+                           source_file='consensus.n2.csv',
+                           obv_file='consensus.n2.obv.csv',
+                           exp_file='consensus.n2.exp.csv'):
     auth = twitter_auth(auth_file)
     api = tweepy.API(auth, wait_on_rate_limit=True)
-    import ipdb; ipdb.set_trace()
-    input_df = pd.read_csv(source_file).head(10)
-    output_df = collect_tweets(api, input_df.Source.tolist(), 
-                               first_page_only=True)
+    sdf = pd.read_csv(source_file).head(10)
+    rdf = collect_tweets(api, sdf.Source.tolist(), first_page_only=True)
     cname = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-    gp = output_df.groupby('domain')
-    obv_v = gp.size().fillna(0.0)
-    obv_t = ((gp.created_at.max() - gp.created_at.min()) / np.timedelta64(1, 's')).fillna(1.0)
+    gp = rdf.groupby('domain')
+    obv_v = gp.size()
+    obv_t = (
+        (gp.created_at.max() - gp.created_at.min()) / np.timedelta64(1, 's'))
     exp_v = obv_v / obv_t * 24 * 3600
-    r_str = obv_v.astype(str) + '/' + exp_v.astype(str)
-    r_str[obv_v < 100] = obv_v[obv_v < 100].astype(str) + '/' + (obv_v[obv_v <100 ] / 7.0).astype(str)
-    r_str = r_str.rename(cname).reset_index()
-    df = pd.merge(
-        input_df, r_str, how='left', left_on='Source', right_on='domain')
-    df = df.drop('domain', axis=1)
-    df = df.fillna('0.0/0.0')
-    df.to_csv(source_file, index=False)
+    exp_v[obv_v < 100] = obv_v[obv_v < 100] / 7.0
+    # save obv_v
+    try:
+        obv_df = pd.read_csv(obv_file)
+        obv_df.set_index('domain', inplace=True)
+        obv_df[cname] = 0.0
+        obv_df.loc[obv_v.index, cname] = obv_v.values
+        obv_df.to_csv(obv_file, index=True)
+    except FileNotFoundError as e:
+        obv_df.to_csv(obv_file, index=True)
+
+    # save exp_v
+    try:
+        exp_df = pd.read_csv(exp_file)
+        exp_df.set_index('domain', inplace=True)
+        exp_df[cname] = 0.0
+        exp_df.loc[exp_v.index, cname] = exp_v.values
+        exp_df.to_csv(exp_file, index=True)
+    except FileNotFoundError as e:
+        exp_df.to_csv(exp_file, index=True)
 
 
-if  __name__ == '__main__':
+if __name__ == '__main__':
     import sys
     logging.basicConfig(level='DEBUG', stream=sys.stdout)
     track_sites_popularity()

@@ -107,4 +107,5 @@ ENV/
 twitter_credentials.json
 
 # results data
-consensus.n2.csv
+consensus.n2.obv.csv
+consensus.n2.exp.csv
