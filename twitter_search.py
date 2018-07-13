@@ -126,8 +126,12 @@ def track_sites_popularity(auth_file='twitter_credentials.json',
     exp_v[obv_v < 100] = obv_v[obv_v < 100] / 7.0
     # left merge
     obv_v_full = pd.Series(0.0, index=sdf.Source.tolist())
+    obv_v_full.index.name = 'domain'
+    obv_v_full.name = cname
     obv_v_full[obv_v.index] = obv_v.values
     exp_v_full = pd.Series(0.0, index=sdf.Source.tolist())
+    exp_v_full.index.name = 'domain'
+    exp_v_full.name = cname
     exp_v_full[exp_v.index] = exp_v.values
     try:
         FileNotFoundError
