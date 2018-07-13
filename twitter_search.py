@@ -138,18 +138,18 @@ def track_sites_popularity(auth_file='twitter_credentials.json',
         obv_df = pd.read_csv(obv_file)
         obv_df.set_index('domain', inplace=True)
         obv_df[cname] = obv_v_full
-        obv_df.to_csv(obv_file, index=True)
+        obv_df.to_csv(obv_file, index=True, header=True)
     except FileNotFoundError:
-        obv_v_full.to_csv(obv_file, index=True)
+        obv_v_full.to_csv(obv_file, index=True, header=True)
 
     # save exp_v
     try:
         exp_df = pd.read_csv(exp_file)
         exp_df.set_index('domain', inplace=True)
         exp_df[cname] = exp_v_full
-        exp_df.to_csv(exp_file, index=True)
+        exp_df.to_csv(exp_file, index=True, header=True)
     except FileNotFoundError:
-        exp_v_full.to_csv(exp_file, index=True)
+        exp_v_full.to_csv(exp_file, index=True, header=True)
 
 
 if __name__ == '__main__':
