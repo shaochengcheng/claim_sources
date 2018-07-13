@@ -114,11 +114,10 @@ def track_sites_popularity(auth_file='twitter_credentials.json',
                            exp_file='consensus.n2.exp.csv'):
     auth = twitter_auth(auth_file)
     api = tweepy.API(auth, wait_on_rate_limit=True)
-    sdf = pd.read_csv(source_file).head(10)
+    sdf = pd.read_csv(source_file)
     rdf = collect_tweets(api, sdf.Source.tolist(), first_page_only=True)
     cname = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
     gp = rdf.groupby('domain')
-    import ipdb; ipdb.set_trace()
     obv_v = gp.size()
     obv_t = (
         (gp.created_at.max() - gp.created_at.min()) / np.timedelta64(1, 's'))
