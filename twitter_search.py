@@ -137,7 +137,7 @@ def track_sites_popularity(auth_file='twitter_credentials.json',
         obv_df.loc[obv_v.index, cname] = obv_v.values
         obv_df.to_csv(obv_file, index=True)
     except FileNotFoundError:
-        obv_df.to_csv(obv_file, index=True)
+        obv_v.to_csv(obv_file, index=True)
 
     # save exp_v
     try:
@@ -147,7 +147,7 @@ def track_sites_popularity(auth_file='twitter_credentials.json',
         exp_df.loc[exp_v.index, cname] = exp_v.values
         exp_df.to_csv(exp_file, index=True)
     except FileNotFoundError:
-        exp_df.to_csv(exp_file, index=True)
+        exp_v.to_csv(exp_file, index=True)
 
 
 if __name__ == '__main__':
